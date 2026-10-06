@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Пользователи — Меню столовой{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Пользователи</h1>
+    <p class="meta">Учётные записи сотрудников и администраторов. У посетителей аккаунтов нет.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('users.new_user') }}">+ Новый пользователь</a>
+</div>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Логин</th>
+      <th>Имя</th>
+      <th>Роль</th>
+      <th>Статус</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+    <tr>
+      <td>{{ user.username }}{% if user.id == current_user.id %} <span class="meta">(вы)</span>{% endif %}</td>
+      <td>{{ user.full_name }}</td>
+      <td>{{ user.role.description or user.role.name }}</td>
+      <td>
+        {% if user.is_active_account %}
+          <span class="badge badge-success">активен</span>
+        {% else %}
+          <span class="badge badge-muted">отключён</span>
+        {% endif %}
+      </td>
+      <td><a class="btn btn-small" href="{{ url_for('users.edit_user', user_id=user.id) }}">Изменить</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

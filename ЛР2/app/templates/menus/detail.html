@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Меню на {{ menu.menu_date.strftime('%d.%m.%Y') }} — Меню столовой{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Меню на {{ menu.menu_date.strftime('%d.%m.%Y') }}</h1>
+    <p class="meta">
+      {% if menu.is_published %}
+        <span class="badge badge-success">опубликовано</span>
+        {% if menu.published_at %}с {{ menu.published_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+      {% else %}
+        <span class="badge badge-muted">черновик</span> — посетители его не видят
+      {% endif %}
+    </p>
+  </div>
+  <div class="actions-row" style="margin:0;">
+    {% if current_user.has_role('admin') %}
+      {% if menu.is_published %}
+        <form class="inline-form" method="post" action="{{ url_for('menus.unpublish_menu', menu_id=menu.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn" type="submit">Снять с публикации</button>
+        </form>
+      {% else %}
+        <form class="inline-form" method="post" action="{{ url_for('menus.publish_menu', menu_id=menu.id) }}"
+              onsubmit="return confirm('Опубликовать меню на {{ menu.menu_date.strftime('%d.%m.%Y') }}?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary" type="submit" {{ 'disabled' if not can_publish else '' }}>Опубликовать</button>
+        </form>
+      {% endif %}
+    {% endif %}
+    <a class="btn" href="{{ url_for('menus.list_menus') }}">К списку меню</a>
+  </div>
+</div>
+
+{% if not can_publish and not menu.is_published %}
+  <div class="flash flash-warning">В меню нет ни одного доступного блюда — опубликовать пока нельзя.</div>
+{% endif %}
+
+{% if menu.items %}
+<table class="data-table" style="margin-bottom:1.5rem;">
+  <thead>
+    <tr>
+      <th>Порядок</th>
+      <th>Блюдо</th>
+      <th>Цена</th>
+      <th>Статус</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in menu.items %}
+    <tr>
+      <td style="white-space:nowrap;">
+        <form class="inline-form" method="post" action="{{ url_for('menus.move_item_up', menu_id=menu.id, item_id=item.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-small" type="submit" title="Переместить выше" {{ 'disabled' if loop.first else '' }}>↑</button>
+        </form>
+        <form class="inline-form" method="post" action="{{ url_for('menus.move_item_down', menu_id=menu.id, item_id=item.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-small" type="submit" title="Переместить ниже" {{ 'disabled' if loop.last else '' }}>↓</button>
+        </form>
+      </td>
+      <td>{{ item.dish.name }} <span class="meta">· {{ item.dish.category.name }}</span></td>
+      <td>{{ item.dish.price|money }} ₽</td>
+      <td>
+        {% if item.dish.is_available %}
+          <span class="badge badge-success">в наличии</span>
+        {% else %}
+          <span class="badge badge-muted">нет в наличии</span>
+        {% endif %}
+      </td>
+      <td>
+        <form class="inline-form" method="post" action="{{ url_for('menus.delete_menu_item', menu_id=menu.id, item_id=item.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-small btn-danger" type="submit">Убрать</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state" style="margin-bottom:1.5rem;">
+  <p>В этом меню пока нет блюд. Добавьте первое ниже.</p>
+</div>
+{% endif %}
+
+<h2>Добавить блюдо в меню</h2>
+{% if add_item_form.dish_id.choices %}
+<form method="post" action="{{ url_for('menus.add_menu_item', menu_id=menu.id) }}" style="display:flex; gap:0.6rem; align-items:flex-start; max-width:520px;">
+  {{ add_item_form.hidden_tag() }}
+  <div style="flex:1;">
+    {{ add_item_form.dish_id() }}
+  </div>
+  <button class="btn btn-primary" type="submit">Добавить</button>
+</form>
+{% else %}
+<p class="meta">Все существующие блюда уже добавлены в это меню — <a href="{{ url_for('dishes.new_dish') }}">создайте новое блюдо</a>, чтобы добавить его сюда.</p>
+{% endif %}
+{% endblock %}

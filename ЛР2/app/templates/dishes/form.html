@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Изменить блюдо' if dish else 'Новое блюдо' }} — Меню столовой{% endblock %}
+{% block content %}
+<h1>{{ 'Изменить блюдо' if dish else 'Новое блюдо' }}</h1>
+
+<form class="card-form" method="post" novalidate>
+  {{ form.hidden_tag() }}
+
+  <div class="field">
+    {{ form.name.label }}
+    {{ form.name(autofocus=true) }}
+    {% if form.name.errors %}<ul class="field-errors">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+
+  <div class="field">
+    {{ form.category_id.label }}
+    {{ form.category_id() }}
+    {% if form.category_id.errors %}<ul class="field-errors">{% for e in form.category_id.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+
+  <div class="field">
+    {{ form.description.label }}
+    {{ form.description() }}
+    {% if form.description.errors %}<ul class="field-errors">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+
+  <div style="display:flex; gap:0.75rem;">
+    <div class="field" style="flex:1;">
+      {{ form.portion_size.label }}
+      {{ form.portion_size() }}
+      {% if form.portion_size.errors %}<ul class="field-errors">{% for e in form.portion_size.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="field" style="flex:1;">
+      {{ form.portion_unit.label }}
+      {{ form.portion_unit() }}
+    </div>
+  </div>
+
+  <div class="field">
+    {{ form.price.label }}
+    {{ form.price() }}
+    {% if form.price.errors %}<ul class="field-errors">{% for e in form.price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+
+  <div class="field field-checkbox">
+    {{ form.is_available() }}
+    {{ form.is_available.label }}
+  </div>
+
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+    <a class="btn" href="{{ url_for('dishes.list_dishes') }}">Отмена</a>
+  </div>
+</form>
+{% endblock %}

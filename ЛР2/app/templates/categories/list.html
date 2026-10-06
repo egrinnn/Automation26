@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Категории — Меню столовой{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Категории блюд</h1>
+    <p class="meta">Справочник категорий. Архивная категория не показывается при добавлении нового блюда.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('categories.new_category') }}">+ Новая категория</a>
+</div>
+
+<div class="actions-row">
+  {% if show_archived %}
+    <a class="btn btn-small" href="{{ url_for('categories.list_categories') }}">Показать только активные</a>
+  {% else %}
+    <a class="btn btn-small" href="{{ url_for('categories.list_categories', show='all') }}">Показать вместе с архивными</a>
+  {% endif %}
+</div>
+
+{% if categories %}
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Название</th>
+      <th>Статус</th>
+      <th>Блюд в категории</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for category in categories %}
+    <tr>
+      <td>{{ category.name }}</td>
+      <td>
+        {% if category.is_active %}
+          <span class="badge badge-success">активна</span>
+        {% else %}
+          <span class="badge badge-muted">в архиве</span>
+        {% endif %}
+      </td>
+      <td>{{ category.dishes|length }}</td>
+      <td>
+        <a class="btn btn-small" href="{{ url_for('categories.edit_category', category_id=category.id) }}">Изменить</a>
+        {% if category.is_active %}
+          <form class="inline-form" method="post" action="{{ url_for('categories.archive_category', category_id=category.id) }}" onsubmit="return confirm('Перенести категорию «{{ category.name }}» в архив?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-small btn-danger" type="submit">В архив</button>
+          </form>
+        {% else %}
+          <form class="inline-form" method="post" action="{{ url_for('categories.restore_category', category_id=category.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-small" type="submit">Восстановить</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+  <p>Категорий пока нет. Добавьте первую, чтобы можно было заводить блюда.</p>
+</div>
+{% endif %}
+{% endblock %}

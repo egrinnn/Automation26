@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Вход — Меню столовой{% endblock %}
+{% block content_wrapper %}
+<div class="login-wrap">
+  <div>
+    <h1 style="text-align:center;">Вход для сотрудников</h1>
+    <p class="meta" style="text-align:center; margin-bottom:1.5rem;">Посетителям вход не нужен — меню открыто для просмотра без учётной записи.</p>
+
+    {% block flash %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    {% endblock %}
+
+    <form class="card-form" method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="field">
+        {{ form.username.label }}
+        {{ form.username(autofocus=true, autocomplete="username") }}
+        {% if form.username.errors %}
+          <ul class="field-errors">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+      <div class="field">
+        {{ form.password.label }}
+        {{ form.password(autocomplete="current-password") }}
+        {% if form.password.errors %}
+          <ul class="field-errors">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Войти</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

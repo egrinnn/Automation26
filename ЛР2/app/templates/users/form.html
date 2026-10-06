@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Изменить пользователя' if user else 'Новый пользователь' }} — Меню столовой{% endblock %}
+{% block content %}
+<h1>{{ 'Изменить пользователя: ' + user.username if user else 'Новый пользователь' }}</h1>
+
+<form class="card-form" method="post" novalidate>
+  {{ form.hidden_tag() }}
+
+  {% if not user %}
+  <div class="field">
+    {{ form.username.label }}
+    {{ form.username(autofocus=true, autocomplete="off") }}
+    {% if form.username.errors %}<ul class="field-errors">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="field">
+    {{ form.full_name.label }}
+    {{ form.full_name() }}
+    {% if form.full_name.errors %}<ul class="field-errors">{% for e in form.full_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+
+  <div class="field">
+    {{ form.role_id.label }}
+    {{ form.role_id() }}
+    {% if form.role_id.errors %}<ul class="field-errors">{% for e in form.role_id.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+
+  {% if user %}
+    <div class="field field-checkbox">
+      {{ form.is_active_account() }}
+      {{ form.is_active_account.label }}
+    </div>
+    <div class="field">
+      {{ form.new_password.label }}
+      {{ form.new_password(autocomplete="new-password") }}
+      <p class="hint">Оставьте пустым, если менять пароль не нужно.</p>
+      {% if form.new_password.errors %}<ul class="field-errors">{% for e in form.new_password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="field">
+      {{ form.confirm_password.label }}
+      {{ form.confirm_password(autocomplete="new-password") }}
+      {% if form.confirm_password.errors %}<ul class="field-errors">{% for e in form.confirm_password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+  {% else %}
+    <div class="field">
+      {{ form.password.label }}
+      {{ form.password(autocomplete="new-password") }}
+      {% if form.password.errors %}<ul class="field-errors">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="field">
+      {{ form.confirm_password.label }}
+      {{ form.confirm_password(autocomplete="new-password") }}
+      {% if form.confirm_password.errors %}<ul class="field-errors">{% for e in form.confirm_password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="field field-checkbox">
+      {{ form.is_active_account() }}
+      {{ form.is_active_account.label }}
+    </div>
+  {% endif %}
+
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+    <a class="btn" href="{{ url_for('users.list_users') }}">Отмена</a>
+  </div>
+</form>
+{% endblock %}

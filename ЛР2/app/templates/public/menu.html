@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Меню на {{ selected_date|ru_date }} — Меню столовой{% endblock %}
+
+{% block content_wrapper %}
+<div class="menu-hero">
+  <div class="menu-hero-inner">
+    <h1>Меню столовой</h1>
+    <p style="color:#c9c7ba; margin:0;">Актуальное меню на выбранную дату</p>
+    <div class="date-nav">
+      <a href="{{ url_for('public.view_menu', date=prev_date.isoformat()) }}">&larr; {{ prev_date.strftime('%d.%m') }}</a>
+      <span class="current-date">{{ selected_date|ru_date }}{% if selected_date == today %} · сегодня{% endif %}</span>
+      <a href="{{ url_for('public.view_menu', date=next_date.isoformat()) }}">{{ next_date.strftime('%d.%m') }} &rarr;</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  {% block flash %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  {% endblock %}
+</div>
+
+<div class="menu-board">
+  {% if menu is none or not categories %}
+    <div class="empty-state">
+      <h2 style="color:var(--color-ink);">На эту дату меню пока не опубликовано</h2>
+      <p>Загляните позже или выберите другую дату стрелками выше.</p>
+    </div>
+  {% else %}
+    {% for category, items in categories.items() %}
+      <div class="menu-category">
+        <h2>{{ category.name }}</h2>
+        {% for item in items %}
+          {% set dish = item.dish %}
+          <div class="dish-row-wrap">
+            <div class="dish-row {{ '' if dish.is_available else 'unavailable' }}">
+              <span class="dish-name">
+                {{ dish.name }}
+                <span class="dish-meta">{{ dish.portion_size }} {{ 'г' if dish.portion_unit == 'g' else 'мл' }}</span>
+              </span>
+              <span class="dish-leader"></span>
+              {% if not dish.is_available %}
+                <span class="dish-unavailable-tag">нет в наличии</span>
+              {% endif %}
+              <span class="dish-price">{{ dish.price|money }} ₽</span>
+            </div>
+            {% if dish.description %}
+              <div class="dish-desc">{{ dish.description }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<footer class="site-footer">АС «Меню столовой» · учебный проект</footer>
+{% endblock %}

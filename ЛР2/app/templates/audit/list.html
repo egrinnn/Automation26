@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Журнал — Меню столовой{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Журнал действий</h1>
+    <p class="meta">Компактный журнал: создание, изменение, архивирование и публикация справочников и меню (п. 4.2.8 ТЗ).</p>
+  </div>
+</div>
+
+<form class="filter-bar" method="get">
+  <select name="entity_type">
+    <option value="">Все типы</option>
+    {% for et in entity_types %}
+      <option value="{{ et }}" {{ 'selected' if selected_entity_type == et else '' }}>{{ et }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn btn-small" type="submit">Применить</button>
+  {% if selected_entity_type %}
+    <a class="btn btn-small" href="{{ url_for('audit.list_audit') }}">Сбросить</a>
+  {% endif %}
+</form>
+
+{% if entries %}
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Дата и время</th>
+      <th>Пользователь</th>
+      <th>Действие</th>
+      <th>Сущность</th>
+      <th>ID</th>
+      <th>Подробности</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for entry in entries %}
+    <tr>
+      <td>{{ entry.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+      <td>{{ entry.user.username if entry.user else '—' }}</td>
+      <td>{{ entry.action }}</td>
+      <td>{{ entry.entity_type }}</td>
+      <td>{{ entry.entity_id }}</td>
+      <td>{{ entry.details or '' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="meta">Показаны последние {{ entries|length }} {{ entries|length|ru_plural('запись,записи,записей') }}.</p>
+{% else %}
+<div class="empty-state">
+  <p>Записей в журнале пока нет.</p>
+</div>
+{% endif %}
+{% endblock %}

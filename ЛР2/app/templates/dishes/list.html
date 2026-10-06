@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Блюда — Меню столовой{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Блюда</h1>
+    <p class="meta">Каталог блюд. Недоступное блюдо не удаляется — переводится в статус «нет в наличии».</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('dishes.new_dish') }}">+ Новое блюдо</a>
+</div>
+
+<form class="filter-bar" method="get">
+  <input type="text" name="q" placeholder="Поиск по названию…" value="{{ search }}">
+  <select name="category_id">
+    <option value="">Все категории</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}" {{ 'selected' if selected_category_id == c.id else '' }}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="availability">
+    <option value="">Любая доступность</option>
+    <option value="available" {{ 'selected' if availability == 'available' else '' }}>В наличии</option>
+    <option value="unavailable" {{ 'selected' if availability == 'unavailable' else '' }}>Нет в наличии</option>
+  </select>
+  <button class="btn btn-small" type="submit">Применить</button>
+  {% if search or selected_category_id or availability %}
+    <a class="btn btn-small" href="{{ url_for('dishes.list_dishes') }}">Сбросить</a>
+  {% endif %}
+</form>
+
+{% if dishes %}
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Название</th>
+      <th>Категория</th>
+      <th>Порция</th>
+      <th>Цена</th>
+      <th>Статус</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for dish in dishes %}
+    <tr>
+      <td>{{ dish.name }}</td>
+      <td>{{ dish.category.name }}</td>
+      <td>{{ dish.portion_size }} {{ 'г' if dish.portion_unit == 'g' else 'мл' }}</td>
+      <td>{{ dish.price|money }} ₽</td>
+      <td>
+        {% if dish.is_available %}
+          <span class="badge badge-success">в наличии</span>
+        {% else %}
+          <span class="badge badge-muted">нет в наличии</span>
+        {% endif %}
+      </td>
+      <td>
+        <a class="btn btn-small" href="{{ url_for('dishes.edit_dish', dish_id=dish.id) }}">Изменить</a>
+        {% if dish.is_available %}
+          <form class="inline-form" method="post" action="{{ url_for('dishes.archive_dish', dish_id=dish.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-small btn-danger" type="submit">Снять</button>
+          </form>
+        {% else %}
+          <form class="inline-form" method="post" action="{{ url_for('dishes.restore_dish', dish_id=dish.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-small" type="submit">Вернуть</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+  <p>Ничего не найдено. Измените условия поиска или добавьте новое блюдо.</p>
+</div>
+{% endif %}
+{% endblock %}

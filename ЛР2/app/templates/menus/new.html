@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Новое меню — Меню столовой{% endblock %}
+{% block content %}
+<h1>Новое меню</h1>
+<p class="meta" style="margin-top:-0.5rem; margin-bottom:1.25rem;">Меню создаётся черновиком на выбранную дату; блюда добавите на следующем шаге.</p>
+
+<form class="card-form" method="post" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="field">
+    {{ form.menu_date.label }}
+    {{ form.menu_date(autofocus=true) }}
+    {% if form.menu_date.errors %}
+      <ul class="field-errors">{% for e in form.menu_date.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% endif %}
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">Создать черновик</button>
+    <a class="btn" href="{{ url_for('menus.list_menus') }}">Отмена</a>
+  </div>
+</form>
+{% endblock %}

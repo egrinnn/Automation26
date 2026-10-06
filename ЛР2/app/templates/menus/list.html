@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Меню — Меню столовой{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Меню по датам</h1>
+    <p class="meta">Публикацию видит посетитель на главной странице; черновик — только сотрудники.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('menus.new_menu') }}">+ Новое меню</a>
+</div>
+
+{% if menus %}
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Дата</th>
+      <th>Статус</th>
+      <th>Позиций</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for menu in menus %}
+    <tr>
+      <td>{{ menu.menu_date.strftime('%d.%m.%Y') }}</td>
+      <td>
+        {% if menu.is_published %}
+          <span class="badge badge-success">опубликовано</span>
+        {% else %}
+          <span class="badge badge-muted">черновик</span>
+        {% endif %}
+      </td>
+      <td>{{ menu.items|length }}</td>
+      <td><a class="btn btn-small" href="{{ url_for('menus.menu_detail', menu_id=menu.id) }}">Открыть</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+  <p>Меню ещё не создавались. Начните с выбора даты.</p>
+</div>
+{% endif %}
+{% endblock %}
