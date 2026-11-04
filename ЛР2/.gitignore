@@ -3,6 +3,8 @@ __pycache__/
 *.pyc
 .env
 .env.stage
+.env.test
+.env.prod
 *.egg-info/
 .pytest_cache/
 instance/
@@ -17,3 +19,5 @@ trufflehog-report.log
 pytest-report.xml
 pytest-report.txt
 coverage.xml
+sqlcheck-reports/
+prod_backup_*.dump

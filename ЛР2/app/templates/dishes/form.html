@@ -42,6 +42,12 @@
     {% if form.price.errors %}<ul class="field-errors">{% for e in form.price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
   </div>
 
+  <div class="field">
+    {{ form.calories.label }}
+    {{ form.calories() }}
+    {% if form.calories.errors %}<ul class="field-errors">{% for e in form.calories.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+
   <div class="field field-checkbox">
     {{ form.is_available() }}
     {{ form.is_available.label }}

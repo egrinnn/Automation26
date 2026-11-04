@@ -109,6 +109,7 @@ class Dish(db.Model):
     portion_size = db.Column(db.Numeric(8, 2), nullable=False)
     portion_unit = db.Column(db.String(2), nullable=False, default=PORTION_UNIT_GRAM)
     price = db.Column(db.Numeric(10, 2), nullable=False)
+    calories = db.Column(db.Integer, nullable=True)
     is_available = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=utcnow, onupdate=utcnow)
@@ -120,6 +121,7 @@ class Dish(db.Model):
         CheckConstraint('price > 0', name='price_positive'),
         CheckConstraint('portion_size > 0', name='portion_size_positive'),
         CheckConstraint("portion_unit IN ('g', 'ml')", name='portion_unit_valid'),
+        CheckConstraint('calories IS NULL OR calories >= 0', name='calories_non_negative'),
     )
 
     def __repr__(self):

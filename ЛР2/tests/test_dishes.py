@@ -9,6 +9,7 @@ def _dish_payload(category, **overrides):
         'portion_size': '250',
         'portion_unit': 'g',
         'price': '220.00',
+        'calories': '320',
         'is_available': 'y',
     }
     payload.update(overrides)
@@ -79,3 +80,15 @@ def test_archive_dish_does_not_delete_it(client, staff_user, dish, db):
     still_exists = db.session.get(Dish, dish.id)
     assert still_exists is not None
     assert still_exists.is_available is False
+
+
+def test_dish_calories_saved(client, staff_user, category, db):
+    login(client, 'staff', 'staffpass123')
+    response = client.post('/admin/dishes/new', data=_dish_payload(category), follow_redirects=True)
+    assert response.status_code == 200
+
+    from app.models import Dish
+
+    dish = Dish.query.filter_by(name='Плов').first()
+    assert dish is not None
+    assert dish.calories == 320

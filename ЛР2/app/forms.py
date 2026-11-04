@@ -72,6 +72,10 @@ class DishForm(FlaskForm):
             NumberRange(min=0.01, message='Цена должна быть больше нуля.'),
         ],
     )
+    calories = IntegerField(
+        'Калорийность, ккал',
+        validators=[Optional(), NumberRange(min=0, max=5000, message='Калорийность должна быть от 0 до 5000.')],
+    )
     is_available = BooleanField('В наличии', default=True)
 
     def set_category_choices(self, include_category_id=None):

@@ -29,6 +29,9 @@
       {% endif %}
     {% endif %}
     <a class="btn" href="{{ url_for('menus.list_menus') }}">К списку меню</a>
+    {% if menu.items %}
+      <a class="btn" href="{{ url_for('menus.export_menu_csv', menu_id=menu.id) }}">Экспорт в CSV</a>
+    {% endif %}
   </div>
 </div>
 

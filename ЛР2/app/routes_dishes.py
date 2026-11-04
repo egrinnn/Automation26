@@ -56,6 +56,7 @@ def new_dish():
             portion_size=form.portion_size.data,
             portion_unit=form.portion_unit.data,
             price=form.price.data,
+            calories=form.calories.data,
             is_available=form.is_available.data,
         )
         db.session.add(dish)
@@ -82,6 +83,7 @@ def edit_dish(dish_id):
         dish.portion_size = form.portion_size.data
         dish.portion_unit = form.portion_unit.data
         dish.price = form.price.data
+        dish.calories = form.calories.data
         dish.is_available = form.is_available.data
         log_action(AUDIT_ACTION_UPDATE, 'dish', dish.id, details=dish.name)
         db.session.commit()
