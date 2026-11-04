@@ -13,6 +13,18 @@ if ! git -C "$APP_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 fi
 REPO_ROOT="$(git -C "$APP_DIR" rev-parse --show-toplevel)"
 
+# Сканируем только историю текущей ветки, иначе секрет из другой ветки
+# (например, демонстрационной) валил бы сборки всех остальных веток.
+BRANCH="${BUILD_BRANCH:-}"
+if [ -z "$BRANCH" ]; then
+  BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+fi
+if [ -z "$BRANCH" ] || [ "$BRANCH" = "HEAD" ]; then
+  echo "ОШИБКА: не удалось определить ветку для trufflehog" >&2
+  exit 1
+fi
+echo "==> Проверяемая ветка: ${BRANCH}"
+
 TRUFFLEHOG_VERSION=3.99.8
 
 if ! command -v trufflehog >/dev/null 2>&1; then
@@ -25,7 +37,7 @@ fi
 
 echo "==> trufflehog: поиск секретов в git-истории"
 set +e
-trufflehog git "file://${REPO_ROOT}" --json --no-update --fail \
+trufflehog git "file://${REPO_ROOT}" --branch="${BRANCH}" --json --no-update --fail \
   > trufflehog-report.json 2> trufflehog-report.log
 RC=$?
 set -e
