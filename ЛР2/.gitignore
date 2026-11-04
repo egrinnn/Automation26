@@ -17,3 +17,5 @@ trufflehog-report.log
 pytest-report.xml
 pytest-report.txt
 coverage.xml
+sqlcheck-reports/
+prod_backup_*.dump

@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# Деплой образа из Docker Hub на stage-стенд.
-# Запускается TeamCity-агентом (контейнер) в шаге "Deploy to stage".
-#
-# Обязательные переменные окружения:
-#   STAGE_HOST  — IP stage-ВМ (по умолчанию 10.10.0.3)
-#   STAGE_USER  — пользователь SSH (по умолчанию student)
-#   STAGE_KEY   — путь к приватному ключу внутри агента
-#   APP_TAG     — тег образа (dev)
 set -euo pipefail
 
 STAGE_HOST="${STAGE_HOST:-10.10.0.3}"
@@ -14,6 +6,10 @@ STAGE_USER="${STAGE_USER:-student}"
 STAGE_KEY="${STAGE_KEY:-/data/teamcity_agent/conf/stage_key}"
 STAGE_DIR="${STAGE_DIR:-/home/student/menu-stolovoy}"
 APP_TAG="${APP_TAG:-dev}"
+TEST_DB_CONTAINER="${TEST_DB_CONTAINER:-menu_test_db}"
+STAGE_DB_CONTAINER="${STAGE_DB_CONTAINER:-menu_stage_db}"
+POSTGRES_USER="${POSTGRES_USER:-menu_user}"
+POSTGRES_DB="${POSTGRES_DB:-menu_stolovoy}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -28,6 +24,40 @@ SSH_OPTS=(
 SSH=(ssh "${SSH_OPTS[@]}")
 SCP=(scp "${SSH_OPTS[@]}")
 
+normalize_schema() {
+  sed -e '/^--/d' -e '/^$/d' -e '/^\\restrict/d' -e '/^\\unrestrict/d' "$1"
+}
+
+compare_schemas() {
+  if ! docker ps --format '{{.Names}}' | grep -qx "${TEST_DB_CONTAINER}"; then
+    echo "Контейнер TEST-БД ${TEST_DB_CONTAINER} не запущен, сверка пропущена"
+    return 0
+  fi
+
+  local test_dump stage_dump
+  test_dump="$(mktemp)"
+  stage_dump="$(mktemp)"
+
+  docker exec "${TEST_DB_CONTAINER}" \
+    pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" \
+    --schema-only --no-owner --no-privileges > "${test_dump}"
+
+  "${SSH[@]}" "${STAGE_USER}@${STAGE_HOST}" \
+    "docker exec ${STAGE_DB_CONTAINER} pg_dump -U ${POSTGRES_USER} -d ${POSTGRES_DB} --schema-only --no-owner --no-privileges" \
+    > "${stage_dump}"
+
+  if diff -q <(normalize_schema "${test_dump}") <(normalize_schema "${stage_dump}") >/dev/null; then
+    echo "Схемы TEST и STAGE идентичны"
+    rm -f "${test_dump}" "${stage_dump}"
+    return 0
+  fi
+
+  echo "Схемы TEST и STAGE различаются:"
+  diff -u <(normalize_schema "${test_dump}") <(normalize_schema "${stage_dump}") || true
+  rm -f "${test_dump}" "${stage_dump}"
+  return 1
+}
+
 echo "==> Деплой образа denizkaderli/menu-stolovoy:${APP_TAG}"
 echo "==> Целевой стенд: ${STAGE_USER}@${STAGE_HOST}:${STAGE_DIR}"
 
@@ -41,12 +71,20 @@ if ! "${SSH[@]}" "${STAGE_USER}@${STAGE_HOST}" "test -f '${STAGE_DIR}/.env.stage
   exit 1
 fi
 
+echo "==> Сверка схем TEST и STAGE до миграции"
+compare_schemas || true
+
 REMOTE_CMD="cd '${STAGE_DIR}' \
-  && APP_TAG='${APP_TAG}' docker compose --env-file .env.stage -f docker-compose.stage.yml pull \
+  && APP_TAG='${APP_TAG}' docker compose --env-file .env.stage -f docker-compose.stage.yml up -d db \
+  && APP_TAG='${APP_TAG}' docker compose --env-file .env.stage -f docker-compose.stage.yml pull app \
+  && APP_TAG='${APP_TAG}' docker compose --env-file .env.stage -f docker-compose.stage.yml run --rm --no-deps --entrypoint flask app db upgrade \
   && APP_TAG='${APP_TAG}' docker compose --env-file .env.stage -f docker-compose.stage.yml up -d --remove-orphans \
   && APP_TAG='${APP_TAG}' docker compose --env-file .env.stage -f docker-compose.stage.yml ps"
 
 "${SSH[@]}" "${STAGE_USER}@${STAGE_HOST}" "${REMOTE_CMD}"
+
+echo "==> Сверка схем TEST и STAGE после миграции"
+compare_schemas
 
 echo "==> Smoke-test: ждём ответ /menu"
 "${SSH[@]}" "${STAGE_USER}@${STAGE_HOST}" '
