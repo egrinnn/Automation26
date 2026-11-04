@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict FhjtiHqthAVETuzoZWwoihwqXpNxff5nfjCh7ELqxdMt0vXcIXdBYBMpt1NLYnS
 
 -- Dumped from database version 16.15 (Debian 16.15-1.pgdg13+2)
 -- Dumped by pg_dump version 16.15 (Debian 16.15-1.pgdg13+2)
@@ -483,4 +482,3 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict FhjtiHqthAVETuzoZWwoihwqXpNxff5nfjCh7ELqxdMt0vXcIXdBYBMpt1NLYnS
