@@ -6,6 +6,13 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$APP_DIR"
 
+# trufflehog умеет сканировать именно git-репозиторий, а ЛР2 — только его подпапка.
+if ! git -C "$APP_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "ОШИБКА: ${APP_DIR} не является git-репозиторием" >&2
+  exit 1
+fi
+REPO_ROOT="$(git -C "$APP_DIR" rev-parse --show-toplevel)"
+
 TRUFFLEHOG_VERSION=3.99.8
 
 if ! command -v trufflehog >/dev/null 2>&1; then
@@ -18,7 +25,7 @@ fi
 
 echo "==> trufflehog: поиск секретов в git-истории"
 set +e
-trufflehog git "file://${APP_DIR}" --json --no-update --fail \
+trufflehog git "file://${REPO_ROOT}" --json --no-update --fail \
   > trufflehog-report.json 2> trufflehog-report.log
 RC=$?
 set -e
