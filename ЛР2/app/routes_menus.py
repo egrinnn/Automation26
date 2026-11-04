@@ -75,7 +75,8 @@ def export_menu_csv(menu_id):
     unit_labels = {'g': 'г', 'ml': 'мл'}
     for index, item in enumerate(menu.items, start=1):
         dish = item.dish
-        portion = f'{dish.portion_size:.2f} {unit_labels.get(dish.portion_unit, dish.portion_unit)}'
+        portion_size = f'{dish.portion_size:.2f}'.replace('.', ',')
+        portion = f'{portion_size} {unit_labels.get(dish.portion_unit, dish.portion_unit)}'
         price = f'{dish.price:.2f}'.replace('.', ',')
         writer.writerow(
             [
