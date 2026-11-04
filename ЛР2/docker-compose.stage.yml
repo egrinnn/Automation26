@@ -1,0 +1,43 @@
+# Стенд stage. Приложение берётся готовым образом из Docker Hub,
+# база данных поднимается рядом в отдельном контейнере с именованным томом.
+# Файл используется шагом TeamCity "Deploy to stage" (ветка dev).
+#
+# Запуск вручную на stage-ВМ:
+#   cd ~/menu-stolovoy
+#   APP_TAG=dev docker compose --env-file .env.stage -f docker-compose.stage.yml up -d
+
+services:
+  db:
+    image: postgres:16
+    container_name: menu_stage_db
+    hostname: menu_stage_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-menu_stolovoy}
+      POSTGRES_USER: ${POSTGRES_USER:-menu_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?в .env.stage должен быть указан POSTGRES_PASSWORD}
+    volumes:
+      - stage_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-menu_user} -d ${POSTGRES_DB:-menu_stolovoy}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    image: denizkaderli/menu-stolovoy:${APP_TAG:-dev}
+    container_name: menu_stage_app
+    hostname: menu_stage_app
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-menu_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-menu_stolovoy}
+      SECRET_KEY: ${SECRET_KEY:-stage-secret-change-me}
+      FLASK_ENV: production
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  stage_db_data:

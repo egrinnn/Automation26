@@ -1,4 +1,7 @@
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+import csv
+import io
+
+from flask import Blueprint, Response, abort, flash, redirect, render_template, request, url_for
 
 from app.decorators import admin_required, staff_or_admin_required
 from app.extensions import db
@@ -50,6 +53,49 @@ def menu_detail(menu_id):
         menu=menu,
         add_item_form=add_item_form,
         can_publish=can_publish,
+    )
+
+
+@menus_bp.route('/<int:menu_id>/export.csv')
+@staff_or_admin_required
+def export_menu_csv(menu_id):
+    """Выгружает меню в CSV (разделитель ';', UTF-8 с BOM) для Excel.
+
+    Функциональность добавлена в ЛР5: сотрудник может выгрузить меню,
+    чтобы распечатать его или передать в бухгалтерию.
+    """
+    menu = db.get_or_404(Menu, menu_id)
+
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';', lineterminator='\r\n')
+    writer.writerow(
+        ['№', 'Категория', 'Блюдо', 'Описание', 'Порция', 'Цена, руб.']
+    )
+
+    unit_labels = {'g': 'г', 'ml': 'мл'}
+    for index, item in enumerate(menu.items, start=1):
+        dish = item.dish
+        portion_size = f'{dish.portion_size:.2f}'.replace('.', ',')
+        portion = f'{portion_size} {unit_labels.get(dish.portion_unit, dish.portion_unit)}'
+        price = f'{dish.price:.2f}'.replace('.', ',')
+        writer.writerow(
+            [
+                index,
+                dish.category.name,
+                dish.name,
+                dish.description or '',
+                portion,
+                price,
+            ]
+        )
+
+    # BOM нужен, чтобы Excel корректно открыл кириллицу.
+    data = '\ufeff' + output.getvalue()
+    filename = f'menu_{menu.menu_date.isoformat()}.csv'
+    return Response(
+        data,
+        mimetype='text/csv; charset=utf-8',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'},
     )
 
 
