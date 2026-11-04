@@ -130,3 +130,15 @@ def test_export_menu_csv_unknown_menu_returns_404(client, staff_user, db):
     login(client, 'staff', 'staffpass123')
     response = client.get('/admin/menus/999999/export.csv')
     assert response.status_code == 404
+
+
+def test_export_menu_csv_has_utf8_bom(client, staff_user, dish, db):
+    login(client, 'staff', 'staffpass123')
+    client.post('/admin/menus/new', data={'menu_date': '2026-10-01'}, follow_redirects=True)
+    menu = Menu.query.filter_by(menu_date='2026-10-01').first()
+    client.post(f'/admin/menus/{menu.id}/items', data={'dish_id': str(dish.id)}, follow_redirects=True)
+
+    response = client.get(f'/admin/menus/{menu.id}/export.csv')
+
+    assert response.status_code == 200
+    assert response.data.startswith(b'\xef\xbb\xbf')
