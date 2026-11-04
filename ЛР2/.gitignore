@@ -14,3 +14,6 @@ bandit-report.json
 bandit-report.txt
 trufflehog-report.json
 trufflehog-report.log
+pytest-report.xml
+pytest-report.txt
+coverage.xml
